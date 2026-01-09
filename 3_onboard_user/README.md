@@ -1,0 +1,1 @@
+note - typically user creation and group membership is not handled by terraform. instead its handeled by a identity system
