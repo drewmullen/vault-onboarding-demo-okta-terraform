@@ -5,3 +5,10 @@ variable "lob" {}
 variable "environments" {
   default = ["dev", "prod"]
 }
+
+variable "policies" {
+  default = {
+    "ro" = ["read", "list"]
+    "rw" = ["create", "read", "update", "delete", "list"]
+  }
+}

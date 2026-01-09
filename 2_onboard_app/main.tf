@@ -1,6 +1,6 @@
 locals {
   enumeration = flatten([for env in var.environments: [
-    for perm in ["rw", "ro"]: "${env}-${perm}"
+    for perm in keys(var.policies): "${env}-${perm}"
 ]])
 }
 
@@ -18,22 +18,13 @@ resource "vault_identity_group" "enumeration" {
   type     = "external"
   
   policies = [
-    local.policies[each.value]
+    vault_policy.enumeration[each.value].name
   ]
 
   metadata = {
     app_id = var.app_id
     app_name = var.app_name
     environment = "dev"
-  }
-}
-
-locals {
-  policies = {
-    "dev-rw" = vault_policy.dev_rw.name
-    "dev-ro" = vault_policy.dev_ro.name
-    "prod-rw" = vault_policy.prod_rw.name
-    "prod-ro" = vault_policy.prod_ro.name
   }
 }
 
@@ -49,57 +40,21 @@ resource "vault_identity_group_alias" "enumeration" {
   mount_accessor = data.vault_auth_backend.okta.accessor
 }
 
+data "vault_policy_document" "enumeration" {
+  for_each = toset(local.enumeration)
 
-data "vault_policy_document" "prod_rw" {
   rule {
-    path         = "${var.bu}/${var.lob}/${var.app_id}/prod/*"
-    capabilities = ["create", "read", "update", "delete", "list"]
-    description  = "allow all on secrets for ${var.app_id} in prod"
+    path         = "${var.bu}/${var.lob}/${var.app_id}/${split("-", each.key)[0]}/*"
+    capabilities = var.policies[split("-", each.value)[1]]
+    description  = "allow  on secrets for ${var.app_id} in ${each.value}"
   }
 }
 
-data "vault_policy_document" "dev_rw" {
-  rule {
-    path         = "${var.bu}/${var.lob}/${var.app_id}/dev/*"
-    capabilities = ["create", "read", "update", "delete", "list"]
-    description  = "allow all on secrets for ${var.app_id} in dev"
-  }
-}
+resource "vault_policy" "enumeration" {
+  for_each = toset(local.enumeration)
 
-data "vault_policy_document" "prod_ro" {
-  rule {
-    path         = "${var.bu}/${var.lob}/${var.app_id}/prod/*"
-    capabilities = ["create", "read", "update", "delete", "list"]
-    description  = "allow all on secrets for ${var.app_id} in prod"
-  }
-}
-
-data "vault_policy_document" "dev_ro" {
-  rule {
-    path         = "${var.bu}/${var.lob}/${var.app_id}/dev/*"
-    capabilities = ["read","list"]
-    description  = "read all on secrets for ${var.app_id} in dev"
-  }
-}
-
-resource "vault_policy" "prod_rw" {
-  name   = "vault-${var.app_id}-prod-rw"
-  policy = data.vault_policy_document.prod_rw.hcl
-}
-
-resource "vault_policy" "dev_rw" {
-  name   = "vault-${var.app_id}-dev-rw"
-  policy = data.vault_policy_document.dev_rw.hcl
-}
-
-resource "vault_policy" "prod_ro" {
-  name   = "vault-${var.app_id}-prod-ro"
-  policy = data.vault_policy_document.prod_ro.hcl
-}
-
-resource "vault_policy" "dev_ro" {
-  name   = "vault-${var.app_id}-dev-ro"
-  policy = data.vault_policy_document.dev_ro.hcl
+  name   = "vault-${var.app_id}-${each.value}"
+  policy = data.vault_policy_document.enumeration[each.value].hcl
 }
 
 data "okta_app_oauth" "default" {
