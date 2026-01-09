@@ -3,7 +3,8 @@ variable "app_name" {}
 variable "bu" {}
 variable "lob" {}
 variable "environments" {
-  default = ["dev", "prod"]
+  default = "dev,prod"
+  // ["dev", "prod"]
 }
 
 variable "policies" {

@@ -1,7 +1,7 @@
 locals {
-  enumeration = flatten([for env in var.environments: [
+  enumeration = flatten([for env in split(",", var.environments): [
     for perm in keys(var.policies): "${env}-${perm}"
-]])
+  ]])
 }
 
 resource "okta_group" "enumeration" {
@@ -24,7 +24,7 @@ resource "vault_identity_group" "enumeration" {
   metadata = {
     app_id = var.app_id
     app_name = var.app_name
-    environment = "dev"
+    environment = split("-", each.key)[0]
   }
 }
 
@@ -51,6 +51,8 @@ data "vault_policy_document" "enumeration" {
 }
 
 resource "vault_policy" "enumeration" {
+  // vault_policy.enumeration["dev-ro"]
+  // vault_policy.enumeration["prod-rw"]
   for_each = toset(local.enumeration)
 
   name   = "vault-${var.app_id}-${each.value}"
