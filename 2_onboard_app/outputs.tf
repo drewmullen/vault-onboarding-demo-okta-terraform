@@ -8,3 +8,7 @@ output "groups" {
     }
   }
 }
+
+output "test" {
+  value = "test values"
+}
