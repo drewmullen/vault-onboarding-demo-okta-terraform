@@ -89,7 +89,7 @@ resource "vault_jwt_auth_backend_role" "default" {
   ]
   user_claim            = "sub"
   groups_claim          = "groups"
-  oidc_scopes           = ["profile", "groups"]
+  oidc_scopes           = ["profile", "groups", "email"]
   bound_audiences       = [okta_app_oauth.default.client_id]
   token_policies        = [vault_policy.self.name]
  
