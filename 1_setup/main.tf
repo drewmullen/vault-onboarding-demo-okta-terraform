@@ -87,7 +87,7 @@ resource "vault_jwt_auth_backend_role" "default" {
     "http://localhost:8250/oidc/callback",
     "${var.vault_addr}/ui/vault/auth/${local.auth_path}/oidc/callback"
   ]
-  user_claim            = "sub"
+  user_claim            = "email"
   groups_claim          = "groups"
   oidc_scopes           = ["profile", "groups", "email"]
   bound_audiences       = [okta_app_oauth.default.client_id]
