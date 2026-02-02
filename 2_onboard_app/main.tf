@@ -57,12 +57,17 @@ resource "vault_policy" "enumeration" {
   policy = data.vault_policy_document.enumeration[each.value].hcl
 }
 
-data "okta_app_oauth" "default" {
+data "okta_app_oauth" "vault" {
   label = "HashiCorp Vault OIDC"
+}
+
+moved {
+  from = data.okta_app_oauth.default
+  to = data.okta_app_oauth.vault
 }
 
 resource "okta_app_group_assignment" "enumeration" {
   for_each = toset(local.enumeration)
-  app_id   = data.okta_app_oauth.default.id
+  app_id   = data.okta_app_oauth.vault.id
   group_id = okta_group.enumeration[each.key].id
 }
